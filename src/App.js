@@ -10,7 +10,6 @@ const SENDER_PRIVATE_KEY = process.env.REACT_APP_PRIVATE_KEY;
 const SEND_AMOUNT = 0.001;
 
 const MY_MICRO_CHAIN_ID = process.env.REACT_APP_MICRO_CHAIN_ID;
-// let LIMIT = 10;
 
 function App() {
   const [balance, setBalance] = useState("");
@@ -43,17 +42,11 @@ function App() {
       if (!node) return;
       if (loading) return;
       if (observer.current) observer.current.disconnect();
-      console.log("cb in", loading);
+
       observer.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && !loading) {
-          console.log("node", node);
-          console.log("observered", observer.current);
           setHistoryLimit((prev) => prev + 10);
           setLoading(true);
-          // LIMIT = LIMIT + 10;
-          // loadTransactionHandler();
-          // console.log("node", node);
-          // if (node) observer.current.observe(node);
         }
       });
       if (node) observer.current.observe(node);
@@ -128,15 +121,6 @@ function App() {
     const result = await server.get(
       `/api/v2/block-explorer/wallets/coins/transactions?microChainId=${MY_MICRO_CHAIN_ID}&address=${SENDER_ADDRESS}&limit=${historyLimit}`
     );
-    // const result = await server.get(
-    //   `/api/v2/block-explorer/wallets/coins/transactions?microChainId=${MY_MICRO_CHAIN_ID}&address=${SENDER_ADDRESS}&limit=${LIMIT}`
-    // );
-    console.log("result", result);
-
-    // setTxHistorys((prev) => {
-    //   // txHistorys.concat(result.data)
-    //   return [...new Set([...prev, ...result.data])];
-    // });
     setTxHistorys(result.data);
     setIsList(true);
     if (result) {
@@ -218,7 +202,7 @@ function App() {
               txHistorys.map((tx, idx) => {
                 //
                 if (idx === historyLimit) {
-                  // console.log("idx === historyLimit", idx === LIMIT);
+                  //
                   return (
                     <TableData
                       txReceipt={tx}
