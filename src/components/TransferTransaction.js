@@ -10,6 +10,7 @@ import {
   server,
   MY_MICRO_CHAIN_ID,
 } from "../App";
+import { getGasAction } from "action/transactionAction";
 
 const TransferTransaction = ({
   receiveAddress,
@@ -27,14 +28,7 @@ const TransferTransaction = ({
       value: WEB3.toHex(WEB3.toWei(SEND_AMOUNT.toString())),
     };
 
-    const gas = await server
-      .post(
-        `/api/v2/request/estimate-gas?microChainId=${MY_MICRO_CHAIN_ID}`,
-        estimateGasBody
-      )
-      .then((res) => {
-        return res.data.gas;
-      });
+    const gas = await getGasAction(MY_MICRO_CHAIN_ID, estimateGasBody);
 
     const transaction = {
       nonce,
