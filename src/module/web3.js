@@ -4,6 +4,12 @@ import Web3 from "web3";
 const web3 = new Web3(Web3.givenProvider);
 
 export const WEB3 = {
+  getAccounts: async () => {
+    return await web3.eth.getAccounts();
+  },
+  privateKeyToAddress: async (privateKey) => {
+    return web3.eth.accounts.privateKeyToAccount(privateKey);
+  },
   signTransaction: async (transaction, pk) => {
     return await web3.eth.accounts.signTransaction(transaction, pk);
   },

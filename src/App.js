@@ -3,6 +3,8 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import { WEB3 } from "./module/web3";
 import "./App.css";
 import TableData from "./module/TableData";
+import BasicButton from "./components/BasicButton";
+import BasicInput from "./components/BasicInput";
 
 const SENDER_ADDRESS = process.env.REACT_APP_USER_ADDRESS;
 const SENDER_PRIVATE_KEY = process.env.REACT_APP_PRIVATE_KEY;
@@ -108,11 +110,6 @@ function App() {
     );
     setTxReceipt(transactionRecipient.data.transaction);
 
-    // const transactionRecipient = await server.get(
-    //   `/api/v2/transactions/result?microChainId=${MY_MICRO_CHAIN_ID}&transactionHash=${transactionHash}`
-    // );
-
-    // setTxReceipt(transactionRecipient.data[0]);
     setIsList(false);
   };
 
@@ -154,11 +151,10 @@ function App() {
       <div className="balance-container">
         <p>Balance </p>
         <div className="balance-button-wrapper">
-          <input
-            type="button"
+          <BasicButton
             className="balance-button"
             value="Load"
-            onClick={loadBalanceHandler}
+            onClickFunc={loadBalanceHandler}
           />
           <p className="balance-text">{balance}</p>
         </div>
@@ -166,23 +162,23 @@ function App() {
       <div className="transaction-container">
         <div>Transaction</div>
         <div className="transaction-input-wrapper">
-          <input
+          <BasicInput
             type="text"
             className="transactipn-input"
             value={receiveAddress}
-            onChange={(e) => setRecieveAddress(e.target.value)}
+            onChangeFunc={(e) => setRecieveAddress(e.target.value)}
           />
-          <input
-            type="button"
+          <BasicButton
             className="transaction-button"
             value="Transfer"
-            onClick={sendTransactionHandler}
+            onClickFunc={sendTransactionHandler}
           />
-          <input
-            type={"button"}
-            className="transaction-button"
+        </div>
+        <div>
+          <BasicButton
+            className="load-transaction-button"
             value="Load TxHistory"
-            onClick={loadTransactionHandler}
+            onClickFunc={loadTransactionHandler}
           />
         </div>
         {/* <div></div> */}

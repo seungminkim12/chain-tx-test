@@ -16,8 +16,6 @@
 }
 
 .balance-button {
-  /* width: 10px; */
-  /* height: 15px; */
 }
 
 .balance-text {
@@ -27,17 +25,18 @@
 .transaction-container {
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
 
 .transaction-input-wrapper {
   display: flex;
-  /* height: 15px; */
-  margin-top: 10px;
 }
 
 .transaction-button {
-  /* width: 10px; */
   margin-left: 10px;
+}
+
+.load-transaction-button {
 }
 
 .transaction-table-wrapper {
