@@ -1,0 +1,16 @@
+.balance-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.balance-button-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.balance-button {
+}
+
+.balance-text {
+  margin-left: 20px;
+}

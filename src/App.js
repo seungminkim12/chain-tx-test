@@ -3,15 +3,24 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import { WEB3 } from "./module/web3";
 import "./App.css";
 import TableData from "./module/TableData";
-import BasicButton from "./components/BasicButton";
-import BasicInput from "./components/BasicInput";
+import BasicButton from "./componentLibrary/BasicButton";
+import BasicInput from "./componentLibrary/BasicInput";
+import TransferTransaction from "./components/TransferTransaction";
+import LoadBalance from "./components/LoadBalance";
 
-const SENDER_ADDRESS = process.env.REACT_APP_USER_ADDRESS;
-const SENDER_PRIVATE_KEY = process.env.REACT_APP_PRIVATE_KEY;
+export const SENDER_ADDRESS = process.env.REACT_APP_USER_ADDRESS;
+export const SENDER_PRIVATE_KEY = process.env.REACT_APP_PRIVATE_KEY;
 
-const SEND_AMOUNT = 0.001;
+export const SEND_AMOUNT = 0.001;
 
-const MY_MICRO_CHAIN_ID = process.env.REACT_APP_MICRO_CHAIN_ID;
+export const MY_MICRO_CHAIN_ID = process.env.REACT_APP_MICRO_CHAIN_ID;
+
+export let server = axios.create({
+  baseURL: process.env.REACT_APP_SERVER_URL,
+});
+
+server.defaults.headers.common["x-eq-ag-api-key"] =
+  process.env.REACT_APP_API_KEY;
 
 function App() {
   const [balance, setBalance] = useState("");
@@ -23,19 +32,12 @@ function App() {
   const [historyLimit, setHistoryLimit] = useState(10);
   const [isList, setIsList] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [pk, setPk] = useState("");
+  const [addressByPk, setAddressByPk] = useState("");
 
   const columns = isList
     ? ["txHash", "to", "from", "fee"]
     : ["txHash", "to", "from", "gas", "gasPrice", "nonce"];
-
-  let server = axios.create({
-    baseURL: process.env.REACT_APP_SERVER_URL,
-  });
-
-  server.defaults.headers.common["x-eq-ag-api-key"] =
-    process.env.REACT_APP_API_KEY;
-
-  let estimateGasBody;
 
   const observer = useRef();
 
@@ -56,63 +58,6 @@ function App() {
     [txHistorys]
   );
 
-  const loadBalanceHandler = async () => {
-    const { data } = await server.get(
-      `/api/v2/block-explorer/wallets/coins/balance?microChainId=${process.env.REACT_APP_MICRO_CHAIN_ID}&address=${process.env.REACT_APP_USER_ADDRESS}`
-    );
-
-    setBalance(WEB3.fromWei(data.balance));
-  };
-
-  const sendTransactionHandler = async () => {
-    estimateGasBody = {
-      to: receiveAddress,
-      from: SENDER_ADDRESS,
-      gasPrice,
-      value: WEB3.toHex(WEB3.toWei(SEND_AMOUNT.toString())),
-    };
-
-    const gas = await server
-      .post(
-        `/api/v2/request/estimate-gas?microChainId=${MY_MICRO_CHAIN_ID}`,
-        estimateGasBody
-      )
-      .then((res) => {
-        return res.data.gas;
-      });
-
-    const transaction = {
-      nonce,
-      to: receiveAddress,
-      chainId: MY_MICRO_CHAIN_ID.toString(),
-      gasPrice,
-      gas: WEB3.fromDecimal(gas),
-      value: WEB3.toHex(WEB3.toWei(SEND_AMOUNT.toString())),
-    };
-
-    const { rawTransaction } = await WEB3.signTransaction(
-      transaction,
-      SENDER_PRIVATE_KEY
-    );
-
-    const sendTransactionBody = {
-      rawTransaction,
-    };
-    const transactionResult = await server.post(
-      `/api/v2/request/transaction?microChainId=${MY_MICRO_CHAIN_ID}`,
-      sendTransactionBody
-    );
-
-    const transactionHash = transactionResult.data.transaction_hash;
-
-    const transactionRecipient = await server.get(
-      `/api/v2/request/transaction/${transactionHash}?microChainId=${MY_MICRO_CHAIN_ID}`
-    );
-    setTxReceipt(transactionRecipient.data.transaction);
-
-    setIsList(false);
-  };
-
   const loadTransactionHandler = async () => {
     setLoading(true);
     const result = await server.get(
@@ -123,6 +68,11 @@ function App() {
     if (result) {
       setLoading(false);
     }
+  };
+
+  const getPkToAddressHandler = async () => {
+    const result = await WEB3.privateKeyToAddress(pk);
+    setAddressByPk(result.address);
   };
 
   useEffect(() => {
@@ -150,30 +100,32 @@ function App() {
     <div className="App">
       <div className="balance-container">
         <p>Balance </p>
-        <div className="balance-button-wrapper">
-          <BasicButton
-            className="balance-button"
-            value="Load"
-            onClickFunc={loadBalanceHandler}
+        <LoadBalance balance={balance} setBalance={setBalance} />
+      </div>
+      <div className="pk-to-address-container">
+        <p>getAddress</p>
+        <div className="pk-to-address-field-container">
+          <BasicInput
+            type={"text"}
+            className={""}
+            value={pk}
+            onChangeFunc={(e) => setPk(e.target.value)}
           />
-          <p className="balance-text">{balance}</p>
+          <BasicButton value={"Get"} onClickFunc={getPkToAddressHandler} />
         </div>
+
+        {addressByPk}
       </div>
       <div className="transaction-container">
         <div>Transaction</div>
-        <div className="transaction-input-wrapper">
-          <BasicInput
-            type="text"
-            className="transactipn-input"
-            value={receiveAddress}
-            onChangeFunc={(e) => setRecieveAddress(e.target.value)}
-          />
-          <BasicButton
-            className="transaction-button"
-            value="Transfer"
-            onClickFunc={sendTransactionHandler}
-          />
-        </div>
+        <TransferTransaction
+          receiveAddress={receiveAddress}
+          setRecieveAddress={setRecieveAddress}
+          gasPrice={gasPrice}
+          nonce={nonce}
+          setTxReceipt={setTxReceipt}
+          setIsList={setIsList}
+        />
         <div>
           <BasicButton
             className="load-transaction-button"
@@ -181,7 +133,6 @@ function App() {
             onClickFunc={loadTransactionHandler}
           />
         </div>
-        {/* <div></div> */}
       </div>
 
       <div className="transaction-table-wrapper">
@@ -196,9 +147,7 @@ function App() {
           <tbody>
             {isList && txHistorys.length > 0 ? (
               txHistorys.map((tx, idx) => {
-                //
                 if (idx === historyLimit) {
-                  //
                   return (
                     <TableData
                       txReceipt={tx}

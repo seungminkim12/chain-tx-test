@@ -5,35 +5,21 @@
   padding: 10px;
 }
 
-.balance-container {
-  display: flex;
-  flex-direction: column;
-}
-
-.balance-button-wrapper {
-  display: flex;
-  align-items: center;
-}
-
-.balance-button {
-}
-
-.balance-text {
-  margin-left: 20px;
-}
-
 .transaction-container {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.transaction-input-wrapper {
+.pk-to-address-container {
   display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
-.transaction-button {
-  margin-left: 10px;
+.pk-to-address-field-container {
+  display: flex;
+  gap: 5px;
 }
 
 .load-transaction-button {
