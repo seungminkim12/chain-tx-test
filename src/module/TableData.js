@@ -1,8 +1,7 @@
-import React, { forwardRef } from "react";
+import React from "react";
 import { WEB3 } from "./web3";
 
 const TableData = ({ txReceipt = null, idx, lastElementRef }) => {
-  //   console.log("txReceipt", txReceipt);
   const isList = txReceipt.gas;
   return (
     <tr id={idx} key={idx} ref={lastElementRef ? lastElementRef : undefined}>

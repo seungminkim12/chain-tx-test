@@ -2,11 +2,13 @@ import axios from "axios";
 import { useCallback, useEffect, useState, useRef } from "react";
 import { WEB3 } from "./module/web3";
 import "./App.css";
-import TableData from "./module/TableData";
 import BasicButton from "./componentLibrary/BasicButton";
 import BasicInput from "./componentLibrary/BasicInput";
 import TransferTransaction from "./components/TransferTransaction";
 import LoadBalance from "./components/LoadBalance";
+import { getAllTokensAction } from "./action/tokenAction";
+import TransactionTable from "components/TransactionTable";
+import TokensTable from "./components/TokensTable";
 
 export const SENDER_ADDRESS = process.env.REACT_APP_USER_ADDRESS;
 export const SENDER_PRIVATE_KEY = process.env.REACT_APP_PRIVATE_KEY;
@@ -34,10 +36,13 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [pk, setPk] = useState("");
   const [addressByPk, setAddressByPk] = useState("");
+  const [tokenList, setTokenList] = useState([]);
+  const [isToken, setIsToken] = useState(false);
 
   const columns = isList
     ? ["txHash", "to", "from", "fee"]
     : ["txHash", "to", "from", "gas", "gasPrice", "nonce"];
+  const tokenColumns = ["image", "name", "unit", "contract_address"];
 
   const observer = useRef();
 
@@ -58,16 +63,58 @@ function App() {
     [txHistorys]
   );
 
+  const getContractByAddressHandler = async () => {
+    // api/v2/contracts/address/0x74b3b73bc81237754d1845f88eebafa73fdc294b
+    // const result = await server.get(`${process.env.REACT_APP_TEST_URL}/api/v2/contracts/address/${}`);
+    const result = await server.get(
+      `api/v2/contracts/address/${process.env.REACT_APP_CONTRACT_ADDRESS}?microChainId=${MY_MICRO_CHAIN_ID}`
+    );
+    console.log("result", result);
+  };
+
+  const getMicroChainListHandler = async () => {
+    const result = await server.get(
+      `${process.env.REACT_APP_TEST_URL}/api/v2/micro-chains`
+    );
+    // const result = await server.get(`/api/v2/micro-chains`);
+    console.log("result", result);
+  };
+
+  const getNetworkListHandler = async () => {
+    const result = await server.get(
+      `${process.env.REACT_APP_TEST_URL}/api/v2/networks`
+    );
+    // const result = await server.get(`/api/v2/networks`);
+    console.log("result: ", result);
+  };
+
+  const getContractListHandler = async () => {
+    const result = await server.get("/api/v2/contracts");
+    console.log("result: ", result);
+  };
+
+  const getAllTokensHandler = async () => {
+    const result = await getAllTokensAction(MY_MICRO_CHAIN_ID);
+    console.log("result.data", result.data);
+    setTokenList(result.data);
+    setIsToken(true);
+  };
+
   const loadTransactionHandler = async () => {
     setLoading(true);
+    // const result = await server.get(
+    //   `/api/v2/block-explorer/wallets/coins/transactions?microChainId=${MY_MICRO_CHAIN_ID}&address=${SENDER_ADDRESS}&limit=${historyLimit}`
+    // );
     const result = await server.get(
-      `/api/v2/block-explorer/wallets/coins/transactions?microChainId=${MY_MICRO_CHAIN_ID}&address=${SENDER_ADDRESS}&limit=${historyLimit}`
+      `/api/v2/block-explorer/wallets/coins/transactions?microChainId=${1176}&address=${SENDER_ADDRESS}&limit=${historyLimit}`
     );
+
     setTxHistorys(result.data);
     setIsList(true);
     if (result) {
       setLoading(false);
     }
+    setIsToken(false);
   };
 
   const getPkToAddressHandler = async () => {
@@ -134,36 +181,54 @@ function App() {
           />
         </div>
       </div>
+      <div>
+        <p>getAllTokens</p>
+        <div>
+          <BasicButton value={"Get"} onClickFunc={getAllTokensHandler} />
+        </div>
+      </div>
+      <div>
+        <p>getContracts</p>
+        <div>
+          <BasicButton value={"Get"} onClickFunc={getContractListHandler} />
+        </div>
+      </div>
+      <div>
+        <p>getNetworks</p>
+        <div>
+          <BasicButton value={"Get"} onClickFunc={getNetworkListHandler} />
+        </div>
+      </div>
+      <div>
+        <p>getMicroChains</p>
+        <div>
+          <BasicButton value={"Get"} onClickFunc={getMicroChainListHandler} />
+        </div>
+      </div>
+      <div>
+        <p>getContractByAddress</p>
+        <div>
+          <BasicButton
+            value={"Get"}
+            onClickFunc={getContractByAddressHandler}
+          />
+        </div>
+      </div>
 
       <div className="transaction-table-wrapper">
         <table>
-          <thead>
-            <tr>
-              {columns.map((column) => (
-                <th key={column}>{column}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {isList && txHistorys.length > 0 ? (
-              txHistorys.map((tx, idx) => {
-                if (idx === historyLimit) {
-                  return (
-                    <TableData
-                      txReceipt={tx}
-                      key={idx}
-                      idx={idx}
-                      lastElementRef={lastElementRef}
-                    />
-                  );
-                } else {
-                  return <TableData txReceipt={tx} key={idx} idx={idx} />;
-                }
-              })
-            ) : (
-              <TableData txReceipt={txReceipt} />
-            )}
-          </tbody>
+          {isToken ? (
+            <TokensTable columns={tokenColumns} tokenList={tokenList} />
+          ) : (
+            <TransactionTable
+              columns={columns}
+              isList={isList}
+              txHistorys={txHistorys}
+              historyLimit={historyLimit}
+              lastElementRef={lastElementRef}
+              txReceipt={txReceipt}
+            />
+          )}
         </table>
       </div>
     </div>

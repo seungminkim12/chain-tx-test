@@ -10,7 +10,10 @@ import {
   server,
   MY_MICRO_CHAIN_ID,
 } from "../App";
-import { getGasAction } from "action/transactionAction";
+import {
+  getGasAction,
+  getTransactionHashAction,
+} from "action/transactionAction";
 
 const TransferTransaction = ({
   receiveAddress,
@@ -47,8 +50,9 @@ const TransferTransaction = ({
     const sendTransactionBody = {
       rawTransaction,
     };
-    const transactionResult = await server.post(
-      `/api/v2/request/transaction?microChainId=${MY_MICRO_CHAIN_ID}`,
+
+    const transactionResult = await getTransactionHashAction(
+      MY_MICRO_CHAIN_ID,
       sendTransactionBody
     );
 

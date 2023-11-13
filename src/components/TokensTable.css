@@ -1,0 +1,21 @@
+.token-icon-image {
+  width: 30px;
+  height: 30px;
+}
+.token-table-head-row {
+  display: flex;
+}
+.token-table-head {
+  display: flex;
+  justify-content: center;
+  width: 100px;
+}
+.token-table-row {
+  display: flex;
+}
+.token-table-data {
+  display: flex;
+
+  justify-content: center;
+  width: 100px;
+}
