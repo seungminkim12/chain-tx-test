@@ -9,6 +9,7 @@ import LoadBalance from "./components/LoadBalance";
 import { getAllTokensAction } from "./action/tokenAction";
 import TransactionTable from "components/TransactionTable";
 import TokensTable from "./components/TokensTable";
+import { getGasPriceFromServer, getNonceFromServer } from "server/dataAPI";
 
 export const SENDER_ADDRESS = process.env.REACT_APP_USER_ADDRESS;
 export const SENDER_PRIVATE_KEY = process.env.REACT_APP_PRIVATE_KEY;
@@ -44,6 +45,12 @@ function App() {
     : ["txHash", "to", "from", "gas", "gasPrice", "nonce"];
   const tokenColumns = ["image", "name", "unit", "contract_address"];
 
+  const isTokenBalance = false;
+
+  const targetChainId = isTokenBalance
+    ? process.env.REACT_APP_TOKEN_MICRO_CHAIN_ID
+    : MY_MICRO_CHAIN_ID;
+
   const observer = useRef();
 
   const lastElementRef = useCallback(
@@ -63,9 +70,12 @@ function App() {
     [txHistorys]
   );
 
+  const getNonceFromAddressHandler = async () => {
+    const result = await WEB3.getTransactionCount(SENDER_ADDRESS);
+    console.log("result", result);
+  };
+
   const getContractByAddressHandler = async () => {
-    // api/v2/contracts/address/0x74b3b73bc81237754d1845f88eebafa73fdc294b
-    // const result = await server.get(`${process.env.REACT_APP_TEST_URL}/api/v2/contracts/address/${}`);
     const result = await server.get(
       `api/v2/contracts/address/${process.env.REACT_APP_CONTRACT_ADDRESS}?microChainId=${MY_MICRO_CHAIN_ID}`
     );
@@ -73,18 +83,12 @@ function App() {
   };
 
   const getMicroChainListHandler = async () => {
-    const result = await server.get(
-      `${process.env.REACT_APP_TEST_URL}/api/v2/micro-chains`
-    );
-    // const result = await server.get(`/api/v2/micro-chains`);
+    const result = await server.get(`/api/v2/micro-chains`);
     console.log("result", result);
   };
 
   const getNetworkListHandler = async () => {
-    const result = await server.get(
-      `${process.env.REACT_APP_TEST_URL}/api/v2/networks`
-    );
-    // const result = await server.get(`/api/v2/networks`);
+    const result = await server.get(`/api/v2/networks`);
     console.log("result: ", result);
   };
 
@@ -95,18 +99,16 @@ function App() {
 
   const getAllTokensHandler = async () => {
     const result = await getAllTokensAction(MY_MICRO_CHAIN_ID);
-    console.log("result.data", result.data);
     setTokenList(result.data);
     setIsToken(true);
   };
 
   const loadTransactionHandler = async () => {
     setLoading(true);
-    // const result = await server.get(
-    //   `/api/v2/block-explorer/wallets/coins/transactions?microChainId=${MY_MICRO_CHAIN_ID}&address=${SENDER_ADDRESS}&limit=${historyLimit}`
-    // );
     const result = await server.get(
-      `/api/v2/block-explorer/wallets/coins/transactions?microChainId=${1176}&address=${SENDER_ADDRESS}&limit=${historyLimit}`
+      isTokenBalance
+        ? `/api/v2/micro-chain-currency/${process.env.REACT_APP_TOKEN_MICRO_CHAIN_ID}/transactions?address=${SENDER_ADDRESS}&limit=${historyLimit}`
+        : `/api/v2/block-explorer/wallets/coins/transactions?microChainId=${MY_MICRO_CHAIN_ID}&address=${SENDER_ADDRESS}&limit=${historyLimit}`
     );
 
     setTxHistorys(result.data);
@@ -123,18 +125,13 @@ function App() {
   };
 
   useEffect(() => {
-    server
-      .get(`/api/v2/micro-chains/${MY_MICRO_CHAIN_ID}/gas-price`)
-      .then((res) => {
-        setGasPrice(WEB3.fromDecimal(res.data.gas_price));
-      });
-    server
-      .get(
-        `/api/v2/request/nonce?microChainId=${MY_MICRO_CHAIN_ID}&address=${SENDER_ADDRESS}`
-      )
-      .then((res) => {
-        setNonce(res.data.nonce);
-      });
+    getGasPriceFromServer(MY_MICRO_CHAIN_ID).then((res) =>
+      setGasPrice(WEB3.fromDecimal(res.data.gas_price))
+    );
+    getNonceFromServer(MY_MICRO_CHAIN_ID, SENDER_ADDRESS).then((res) => {
+      setNonce(res.data.nonce);
+      console.log(WEB3.hexToNumber(res.data.nonce));
+    });
   }, []);
 
   useEffect(() => {
@@ -147,7 +144,11 @@ function App() {
     <div className="App">
       <div className="balance-container">
         <p>Balance </p>
-        <LoadBalance balance={balance} setBalance={setBalance} />
+        <LoadBalance
+          balance={balance}
+          setBalance={setBalance}
+          isTokenBalance={isTokenBalance}
+        />
       </div>
       <div className="pk-to-address-container">
         <p>getAddress</p>
@@ -172,6 +173,7 @@ function App() {
           nonce={nonce}
           setTxReceipt={setTxReceipt}
           setIsList={setIsList}
+          isTokenBalance={isTokenBalance}
         />
         <div>
           <BasicButton
@@ -212,6 +214,12 @@ function App() {
             value={"Get"}
             onClickFunc={getContractByAddressHandler}
           />
+        </div>
+      </div>
+      <div>
+        <p>getNonceFromAddress</p>
+        <div>
+          <BasicButton value={"Get"} onClickFunc={getNonceFromAddressHandler} />
         </div>
       </div>
 

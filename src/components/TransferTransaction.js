@@ -14,6 +14,10 @@ import {
   getGasAction,
   getTransactionHashAction,
 } from "action/transactionAction";
+import {
+  getTokenTransactionFromServer,
+  getTransactionRecipientFromServer,
+} from "server/dataAPI";
 
 const TransferTransaction = ({
   receiveAddress,
@@ -22,46 +26,98 @@ const TransferTransaction = ({
   nonce,
   setTxReceipt,
   setIsList,
+  isTokenBalance,
 }) => {
+  const targetChainId = MY_MICRO_CHAIN_ID;
   const sendTransactionHandler = async () => {
+    let txValue;
+    let tokenDataValue;
+    console.log("MY_MICRO_CHAIN_ID", MY_MICRO_CHAIN_ID);
+    if (isTokenBalance) {
+      const ABICode = await server
+        .get(
+          `/api/v2/contracts/address/${process.env.REACT_APP_CONTRACT_ADDRESS}/abi-code?microChainId=${MY_MICRO_CHAIN_ID}`
+        )
+        .then((res) => res.data);
+      console.log("ABICode", ABICode);
+      const contract = await WEB3.Contract(ABICode);
+
+      console.log("contract", contract);
+
+      const transferParameter = [
+        process.env.REACT_APP_TARGET_ADDRESS,
+        WEB3.toHex(WEB3.toWei(SEND_AMOUNT.toString())),
+      ];
+
+      console.log("transferParameter", transferParameter);
+
+      const encodeParameter = contract.methods["transfer"](
+        ...transferParameter
+      ).encodeABI();
+
+      tokenDataValue = encodeParameter;
+    }
     const estimateGasBody = {
-      to: receiveAddress,
       from: SENDER_ADDRESS,
-      gasPrice,
-      value: WEB3.toHex(WEB3.toWei(SEND_AMOUNT.toString())),
     };
 
+    if (isTokenBalance) {
+      estimateGasBody["data"] = tokenDataValue;
+      estimateGasBody["to"] = process.env.REACT_APP_CONTRACT_ADDRESS;
+    } else {
+      estimateGasBody["value"] = txValue;
+      estimateGasBody["gasPrice"] = gasPrice;
+      estimateGasBody["to"] = receiveAddress;
+    }
+
+    console.log("estimateGasBody", estimateGasBody);
+
     const gas = await getGasAction(MY_MICRO_CHAIN_ID, estimateGasBody);
+    console.log("gas: ", gas);
 
     const transaction = {
       nonce,
-      to: receiveAddress,
-      chainId: MY_MICRO_CHAIN_ID.toString(),
+      chainId: targetChainId.toString(),
       gasPrice,
       gas: WEB3.fromDecimal(gas),
-      value: WEB3.toHex(WEB3.toWei(SEND_AMOUNT.toString())),
     };
+
+    if (isTokenBalance) {
+      transaction["data"] = tokenDataValue;
+      transaction["to"] = process.env.REACT_APP_CONTRACT_ADDRESS;
+    } else {
+      transaction["value"] = txValue;
+      transaction["gasPrice"] = gasPrice;
+      transaction["to"] = receiveAddress;
+    }
+
+    console.log("transaction", transaction);
 
     const { rawTransaction } = await WEB3.signTransaction(
       transaction,
       SENDER_PRIVATE_KEY
     );
-
+    console.log("rawTransaction: ", rawTransaction);
     const sendTransactionBody = {
       rawTransaction,
     };
 
-    const transactionResult = await getTransactionHashAction(
-      MY_MICRO_CHAIN_ID,
-      sendTransactionBody
-    );
+    const transactionResult = isTokenBalance
+      ? await getTokenTransactionFromServer(targetChainId, sendTransactionBody)
+      : await getTransactionHashAction(targetChainId, sendTransactionBody);
 
     const transactionHash = transactionResult.data.transaction_hash;
+    console.log("transactionResult", transactionResult);
 
-    const transactionRecipient = await server.get(
-      `/api/v2/request/transaction/${transactionHash}?microChainId=${MY_MICRO_CHAIN_ID}`
-    );
-    setTxReceipt(transactionRecipient.data.transaction);
+    let transactionRecipient;
+    setTimeout(async () => {
+      transactionRecipient = await getTransactionRecipientFromServer(
+        transactionHash,
+        targetChainId
+      );
+      setTxReceipt(transactionRecipient.data.transaction);
+      console.log("transactionRecipient", transactionRecipient);
+    }, 2000);
 
     setIsList(false);
   };
