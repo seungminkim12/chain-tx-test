@@ -30,10 +30,12 @@ const TransferTransaction = ({
 }) => {
   const targetChainId = MY_MICRO_CHAIN_ID;
   const sendTransactionHandler = async () => {
-    let txValue;
+    let txValue = 0.01;
     let tokenDataValue;
     console.log("MY_MICRO_CHAIN_ID", MY_MICRO_CHAIN_ID);
+    //token contract
     if (isTokenBalance) {
+      const amount = 1;
       const ABICode = await server
         .get(
           `/api/v2/contracts/address/${process.env.REACT_APP_CONTRACT_ADDRESS}/abi-code?microChainId=${MY_MICRO_CHAIN_ID}`
@@ -42,11 +44,18 @@ const TransferTransaction = ({
       console.log("ABICode", ABICode);
       const contract = await WEB3.Contract(ABICode);
 
+      console.log("defaultAccount", WEB3.getDefaultAccount());
+
+      console.log(
+        "balanceByDefaultAccount",
+        await WEB3.getBalanceByDefaultAccount()
+      );
+
       console.log("contract", contract);
 
       const transferParameter = [
         process.env.REACT_APP_TARGET_ADDRESS,
-        WEB3.toHex(WEB3.toWei(SEND_AMOUNT.toString())),
+        WEB3.toHex(WEB3.toWei(amount.toString())),
       ];
 
       console.log("transferParameter", transferParameter);
@@ -57,6 +66,7 @@ const TransferTransaction = ({
 
       tokenDataValue = encodeParameter;
     }
+
     const estimateGasBody = {
       from: SENDER_ADDRESS,
     };
@@ -65,9 +75,9 @@ const TransferTransaction = ({
       estimateGasBody["data"] = tokenDataValue;
       estimateGasBody["to"] = process.env.REACT_APP_CONTRACT_ADDRESS;
     } else {
-      estimateGasBody["value"] = txValue;
       estimateGasBody["gasPrice"] = gasPrice;
       estimateGasBody["to"] = receiveAddress;
+      estimateGasBody["value"] = txValue;
     }
 
     console.log("estimateGasBody", estimateGasBody);
@@ -86,9 +96,9 @@ const TransferTransaction = ({
       transaction["data"] = tokenDataValue;
       transaction["to"] = process.env.REACT_APP_CONTRACT_ADDRESS;
     } else {
-      transaction["value"] = txValue;
       transaction["gasPrice"] = gasPrice;
       transaction["to"] = receiveAddress;
+      transaction["value"] = txValue;
     }
 
     console.log("transaction", transaction);

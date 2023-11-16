@@ -2,6 +2,8 @@ import Web3 from "web3";
 
 const web3 = new Web3(Web3.givenProvider);
 
+web3.eth.defaultAccount = process.env.REACT_APP_USER_ADDRESS;
+
 export const WEB3 = {
   getAccounts: async () => {
     return await web3.eth.getAccounts();
@@ -12,7 +14,23 @@ export const WEB3 = {
   getTransactionCount: async (address) => {
     return await web3.eth.getTransactionCount(address);
   },
+  getBalance: async (address, block) => {
+    return await web3.eth.getBalance(address);
+  },
+  getGasPrice: async () => {
+    return await web3.eth.getGasPrice();
+  },
+  getDefaultAccount: () => {
+    return web3.eth.Contract.defaultAccount;
+  },
+  getBalanceByDefaultAccount: async () => {
+    const result = await web3.eth.getBalance(web3.eth.Contract.defaultAccount);
+    return web3.utils.fromWei(result);
+  },
   privateKeyToAddress: async (privateKey) => {
+    return web3.eth.accounts.privateKeyToAccount(privateKey);
+  },
+  privateKeyToAccount: async (privateKey) => {
     return web3.eth.accounts.privateKeyToAccount(privateKey);
   },
   signTransaction: async (transaction, pk) => {

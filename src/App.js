@@ -45,7 +45,7 @@ function App() {
     : ["txHash", "to", "from", "gas", "gasPrice", "nonce"];
   const tokenColumns = ["image", "name", "unit", "contract_address"];
 
-  const isTokenBalance = false;
+  const isTokenBalance = true;
 
   const targetChainId = isTokenBalance
     ? process.env.REACT_APP_TOKEN_MICRO_CHAIN_ID
@@ -69,6 +69,15 @@ function App() {
     },
     [txHistorys]
   );
+
+  const getAccountsHandler = async () => {
+    return await WEB3.getAccounts();
+  };
+
+  const getGasPriceHandler = async () => {
+    const result = await WEB3.getGasPrice();
+    console.log("gasPrice", WEB3.fromWei(result));
+  };
 
   const getNonceFromAddressHandler = async () => {
     const result = await WEB3.getTransactionCount(SENDER_ADDRESS);
@@ -99,6 +108,7 @@ function App() {
 
   const getAllTokensHandler = async () => {
     const result = await getAllTokensAction(MY_MICRO_CHAIN_ID);
+    console.log("result: ", result);
     setTokenList(result.data);
     setIsToken(true);
   };
@@ -110,7 +120,7 @@ function App() {
         ? `/api/v2/micro-chain-currency/${process.env.REACT_APP_TOKEN_MICRO_CHAIN_ID}/transactions?address=${SENDER_ADDRESS}&limit=${historyLimit}`
         : `/api/v2/block-explorer/wallets/coins/transactions?microChainId=${MY_MICRO_CHAIN_ID}&address=${SENDER_ADDRESS}&limit=${historyLimit}`
     );
-
+    console.log("result", result);
     setTxHistorys(result.data);
     setIsList(true);
     if (result) {
@@ -220,6 +230,20 @@ function App() {
         <p>getNonceFromAddress</p>
         <div>
           <BasicButton value={"Get"} onClickFunc={getNonceFromAddressHandler} />
+        </div>
+      </div>
+
+      <div>
+        <p>getGasPrice</p>
+        <div>
+          <BasicButton value={"Get"} onClickFunc={getGasPriceHandler} />
+        </div>
+      </div>
+
+      <div>
+        <p>getAccounts</p>
+        <div>
+          <BasicButton value={"Get"} onClickFunc={getAccountsHandler} />
         </div>
       </div>
 
