@@ -1,0 +1,7 @@
+.transaction-input-wrapper {
+  display: flex;
+}
+
+.transaction-button {
+  margin-left: 10px;
+}

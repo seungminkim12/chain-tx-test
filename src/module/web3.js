@@ -8,8 +8,17 @@ export const WEB3 = {
   getAccounts: async () => {
     return await web3.eth.getAccounts();
   },
-  Contract: async (ABICode) => {
-    return new web3.eth.Contract(ABICode);
+  Contract: async (ABICode, address) => {
+    return new web3.eth.Contract(ABICode, address);
+  },
+  sendSignedTransaction: async (signedTx) => {
+    return await web3.eth.sendSignedTransaction(signedTx);
+  },
+  estimateGas: async (txObj) => {
+    return await web3.eth.estimateGas(txObj);
+  },
+  getCode: async (address) => {
+    return await web3.eth.getCode(address);
   },
   getTransactionCount: async (address) => {
     return await web3.eth.getTransactionCount(address);
@@ -40,6 +49,7 @@ export const WEB3 = {
     return web3.utils.toWei(amount);
   },
   toHex: (mixed) => {
+    console.log("mixed", mixed);
     return web3.utils.toHex(mixed);
   },
   fromWei: (wei) => {

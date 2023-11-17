@@ -27,6 +27,7 @@ const TransferTransaction = ({
   setTxReceipt,
   setIsList,
   isTokenBalance,
+  defaultAddress,
 }) => {
   const targetChainId = MY_MICRO_CHAIN_ID;
   const sendTransactionHandler = async () => {
@@ -137,7 +138,9 @@ const TransferTransaction = ({
       <BasicInput
         type="text"
         className="transactipn-input"
-        value={receiveAddress}
+        value={
+          receiveAddress ? receiveAddress : process.env.REACT_APP_TARGET_ADDRESS
+        }
         onChangeFunc={(e) => setRecieveAddress(e.target.value)}
       />
       <BasicButton
