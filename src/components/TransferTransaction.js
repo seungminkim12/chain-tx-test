@@ -33,7 +33,7 @@ const TransferTransaction = ({
   const sendTransactionHandler = async () => {
     let txValue = 0.01;
     let tokenDataValue;
-    console.log("MY_MICRO_CHAIN_ID", MY_MICRO_CHAIN_ID);
+
     //token contract
     if (isTokenBalance) {
       const amount = 1;
@@ -42,24 +42,13 @@ const TransferTransaction = ({
           `/api/v2/contracts/address/${process.env.REACT_APP_CONTRACT_ADDRESS}/abi-code?microChainId=${MY_MICRO_CHAIN_ID}`
         )
         .then((res) => res.data);
-      console.log("ABICode", ABICode);
+
       const contract = await WEB3.Contract(ABICode);
-
-      console.log("defaultAccount", WEB3.getDefaultAccount());
-
-      console.log(
-        "balanceByDefaultAccount",
-        await WEB3.getBalanceByDefaultAccount()
-      );
-
-      console.log("contract", contract);
 
       const transferParameter = [
         process.env.REACT_APP_TARGET_ADDRESS,
         WEB3.toHex(WEB3.toWei(amount.toString())),
       ];
-
-      console.log("transferParameter", transferParameter);
 
       const encodeParameter = contract.methods["transfer"](
         ...transferParameter
@@ -81,10 +70,7 @@ const TransferTransaction = ({
       estimateGasBody["value"] = txValue;
     }
 
-    console.log("estimateGasBody", estimateGasBody);
-
     const gas = await getGasAction(MY_MICRO_CHAIN_ID, estimateGasBody);
-    console.log("gas: ", gas);
 
     const transaction = {
       nonce,
@@ -102,13 +88,11 @@ const TransferTransaction = ({
       transaction["value"] = txValue;
     }
 
-    console.log("transaction", transaction);
-
     const { rawTransaction } = await WEB3.signTransaction(
       transaction,
       SENDER_PRIVATE_KEY
     );
-    console.log("rawTransaction: ", rawTransaction);
+
     const sendTransactionBody = {
       rawTransaction,
     };
@@ -118,7 +102,6 @@ const TransferTransaction = ({
       : await getTransactionHashAction(targetChainId, sendTransactionBody);
 
     const transactionHash = transactionResult.data.transaction_hash;
-    console.log("transactionResult", transactionResult);
 
     let transactionRecipient;
     setTimeout(async () => {
@@ -127,7 +110,6 @@ const TransferTransaction = ({
         targetChainId
       );
       setTxReceipt(transactionRecipient.data.transaction);
-      console.log("transactionRecipient", transactionRecipient);
     }, 2000);
 
     setIsList(false);

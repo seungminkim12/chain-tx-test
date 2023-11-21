@@ -20,6 +20,7 @@ function App2() {
   const [address, setAddress] = useState("");
   const [balance, setBalance] = useState("");
   const [isCoin, setIsCoin] = useState(false);
+  const [isTransfer, setIsTransfer] = useState(false);
 
   const loadTransactionHandler = async () => {};
 
@@ -54,7 +55,8 @@ function App2() {
 
   useEffect(() => {
     getBalance_();
-  }, [address, isCoin]);
+    setIsTransfer(false);
+  }, [address, isCoin, isTransfer]);
 
   return (
     <div className="App">
@@ -91,6 +93,8 @@ function App2() {
               pk={pk}
               isCoin={isCoin}
               setIsCoin={setIsCoin}
+              setIsTransfer={setIsTransfer}
+              // contractByteCode={contractByteCode}
             />
             <div>
               <BasicButton
